@@ -6,8 +6,11 @@ import com.craftinginterpreters.expr.subexpr.Literal;
 import com.craftinginterpreters.expr.subexpr.Unary;
 
 public interface Visitor<R> {
-    R visitBinaryExpr(Binary expr);
-    R visitGroupingExpr(Grouping expr);
-    R visitLiteralExpr(Literal expr);
-    R visitUnaryExpr(Unary expr);
+  R visitBinaryExpr(Binary expr);
+
+  R visitGroupingExpr(Grouping expr);
+
+  R visitLiteralExpr(Literal expr);
+
+  R visitUnaryExpr(Unary expr);
 }

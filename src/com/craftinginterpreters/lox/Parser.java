@@ -9,7 +9,7 @@ import com.craftinginterpreters.expr.subexpr.Unary;
 import java.util.List;
 
 class Parser {
-  private static final class ParseError extends RuntimeException{}
+  private static final class ParseError extends RuntimeException {}
 
   private final List<Token> tokens;
   private int current = 0;
@@ -45,10 +45,11 @@ class Parser {
   private Expr comparison() {
     Expr expr = addition();
 
-    while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-        Token operator = previous();
-        Expr right = addition();
-        expr = new Binary(expr, operator, right);
+    while (match(
+        TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+      Token operator = previous();
+      Expr right = addition();
+      expr = new Binary(expr, operator, right);
     }
 
     return expr;
@@ -79,65 +80,65 @@ class Parser {
   }
 
   private Expr unary() {
-      if (match(TokenType.BANG, TokenType.MINUS)) {
-        Token operator = previous();
-        Expr right = unary();
-        return new Unary(operator, right);
-      }
+    if (match(TokenType.BANG, TokenType.MINUS)) {
+      Token operator = previous();
+      Expr right = unary();
+      return new Unary(operator, right);
+    }
 
-      return primary();
+    return primary();
   }
 
   private Expr primary() {
-      if (match(TokenType.FALSE)) return new Literal(false);
-      if (match(TokenType.TRUE)) return new Literal(true);
-      if (match(TokenType.NIL)) return new Literal(null);
+    if (match(TokenType.FALSE)) return new Literal(false);
+    if (match(TokenType.TRUE)) return new Literal(true);
+    if (match(TokenType.NIL)) return new Literal(null);
 
-      if (match(TokenType.NUMBER, TokenType.STRING)) {
-        return new Literal(previous().literal);
-      }
+    if (match(TokenType.NUMBER, TokenType.STRING)) {
+      return new Literal(previous().literal);
+    }
 
-      if (match(TokenType.LEFT_PAREN)) {
-        Expr expr = expression();
-        consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
-        return new Grouping(expr);
-      }
+    if (match(TokenType.LEFT_PAREN)) {
+      Expr expr = expression();
+      consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+      return new Grouping(expr);
+    }
 
-      throw error(peek(), "Expect expression.");
+    throw error(peek(), "Expect expression.");
   }
 
   private Token consume(TokenType type, String message) {
-      if (check(type)) return advance();
+    if (check(type)) return advance();
 
-      throw error(peek(), message);
+    throw error(peek(), message);
   }
 
   private ParseError error(Token token, String message) {
-      Lox.error(token, message);
+    Lox.error(token, message);
 
-      return new ParseError();
+    return new ParseError();
   }
 
   private void synchronize() {
-      advance();
+    advance();
 
-      while (!isAtEnd()) {
-        if (previous().type == TokenType.SEMICOLON) return;
+    while (!isAtEnd()) {
+      if (previous().type == TokenType.SEMICOLON) return;
 
-        switch (peek().type) {
-          case CLASS:
-          case FUN:
-          case VAR:
-          case FOR:
-          case IF:
-          case WHILE:
-          case PRINT:
-          case RETURN:
-              return;
-        }
-
-        advance();
+      switch (peek().type) {
+        case CLASS:
+        case FUN:
+        case VAR:
+        case FOR:
+        case IF:
+        case WHILE:
+        case PRINT:
+        case RETURN:
+          return;
       }
+
+      advance();
+    }
   }
 
   private boolean match(TokenType... types) {
