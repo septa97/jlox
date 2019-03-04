@@ -1,13 +1,12 @@
 package com.craftinginterpreters.lox;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.Visitor;
 import com.craftinginterpreters.expr.subexpr.Binary;
 import com.craftinginterpreters.expr.subexpr.Grouping;
 import com.craftinginterpreters.expr.subexpr.Literal;
 import com.craftinginterpreters.expr.subexpr.Unary;
 
-public class ASTPrinter implements Visitor<String> {
+public class ASTPrinter implements Expr.Visitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
   }

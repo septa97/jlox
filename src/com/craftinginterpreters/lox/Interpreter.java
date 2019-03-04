@@ -1,13 +1,17 @@
 package com.craftinginterpreters.lox;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.Visitor;
 import com.craftinginterpreters.expr.subexpr.Binary;
 import com.craftinginterpreters.expr.subexpr.Grouping;
 import com.craftinginterpreters.expr.subexpr.Literal;
 import com.craftinginterpreters.expr.subexpr.Unary;
+import com.craftinginterpreters.stmt.Stmt;
+import com.craftinginterpreters.stmt.substmt.Expression;
+import com.craftinginterpreters.stmt.substmt.Print;
 
-class Interpreter implements Visitor<Object> {
+import java.util.List;
+
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitBinaryExpr(Binary expr) {
     Object left = evaluate(expr.left);
@@ -130,13 +134,18 @@ class Interpreter implements Visitor<Object> {
     return expr.accept(this);
   }
 
-  void interpret(Expr expression) {
+  void interpret(List<Stmt> statements) {
     try {
-      Object value = evaluate(expression);
-      System.out.println(stringify(value));
+      for (Stmt statement : statements) {
+        execute(statement);
+      }
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
     }
+  }
+
+  private void execute(Stmt stmt) {
+    stmt.accept(this);
   }
 
   private String stringify(Object object) {
@@ -153,5 +162,18 @@ class Interpreter implements Visitor<Object> {
     }
 
     return object.toString();
+  }
+
+  @Override
+  public Void visitExpressionStmt(Expression stmt) {
+    evaluate(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visitPrintStmt(Print stmt) {
+    Object value = evaluate(stmt.expression);
+    System.out.println(stringify(value));
+    return null;
   }
 }

@@ -1,7 +1,6 @@
 package com.craftinginterpreters.expr.subexpr;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.Visitor;
 import com.craftinginterpreters.lox.Token;
 
 public class Unary extends Expr {

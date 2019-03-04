@@ -1,6 +1,6 @@
 package com.craftinginterpreters.lox;
 
-import com.craftinginterpreters.expr.Expr;
+import com.craftinginterpreters.stmt.Stmt;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,11 +19,11 @@ public class Lox {
     Scanner scanner = new Scanner(source);
     List<Token> tokens = scanner.scanTokens();
     Parser parser = new Parser(tokens);
-    Expr expression = parser.parse();
+    List<Stmt> statements = parser.parse();
 
     if (hadError) return;
 
-    interpreter.interpret(expression);
+    interpreter.interpret(statements);
   }
 
   private static void runPrompt() throws IOException {

@@ -5,7 +5,11 @@ import com.craftinginterpreters.expr.subexpr.Binary;
 import com.craftinginterpreters.expr.subexpr.Grouping;
 import com.craftinginterpreters.expr.subexpr.Literal;
 import com.craftinginterpreters.expr.subexpr.Unary;
+import com.craftinginterpreters.stmt.Stmt;
+import com.craftinginterpreters.stmt.substmt.Expression;
+import com.craftinginterpreters.stmt.substmt.Print;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class Parser {
@@ -18,12 +22,34 @@ class Parser {
     this.tokens = tokens;
   }
 
-  Expr parse() {
-    try {
-      return expression();
-    } catch (ParseError error) {
-      return null;
+  List<Stmt> parse() {
+    List<Stmt> statements = new ArrayList<>();
+
+    while (!isAtEnd()) {
+      statements.add(statement());
     }
+
+    return statements;
+  }
+
+  private Stmt statement() {
+    if (match(TokenType.PRINT)) return printStatement();
+
+    return expressionStatement();
+  }
+
+  private Print printStatement() {
+    Expr value = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after value.");
+
+    return new Print(value);
+  }
+
+  private Expression expressionStatement() {
+    Expr value = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+
+    return new Expression(value);
   }
 
   private Expr expression() {

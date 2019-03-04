@@ -1,7 +1,6 @@
 package com.craftinginterpreters.expr.subexpr;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.Visitor;
 
 public class Literal extends Expr {
   public final Object value;
