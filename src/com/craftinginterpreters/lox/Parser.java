@@ -1,13 +1,11 @@
 package com.craftinginterpreters.lox;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.subexpr.Binary;
-import com.craftinginterpreters.expr.subexpr.Grouping;
-import com.craftinginterpreters.expr.subexpr.Literal;
-import com.craftinginterpreters.expr.subexpr.Unary;
+import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
 import com.craftinginterpreters.stmt.substmt.Expression;
 import com.craftinginterpreters.stmt.substmt.Print;
+import com.craftinginterpreters.stmt.substmt.Var;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +24,33 @@ class Parser {
     List<Stmt> statements = new ArrayList<>();
 
     while (!isAtEnd()) {
-      statements.add(statement());
+      statements.add(declaration());
     }
 
     return statements;
+  }
+
+  private Stmt declaration() {
+    try {
+      if (match(TokenType.VAR)) return varDeclaration();
+
+      return statement();
+    } catch (ParseError error) {
+      synchronize();
+      return null;
+    }
+  }
+
+  private Stmt varDeclaration() {
+    Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+    Expr initializer = null;
+    if (match(TokenType.EQUAL)) {
+      initializer = expression();
+    }
+
+    consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+    return new Var(name, initializer);
   }
 
   private Stmt statement() {
@@ -122,6 +143,10 @@ class Parser {
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Literal(previous().literal);
+    }
+
+    if (match(TokenType.IDENTIFIER)) {
+      return new Variable(previous());
     }
 
     if (match(TokenType.LEFT_PAREN)) {

@@ -1,17 +1,17 @@
 package com.craftinginterpreters.lox;
 
 import com.craftinginterpreters.expr.Expr;
-import com.craftinginterpreters.expr.subexpr.Binary;
-import com.craftinginterpreters.expr.subexpr.Grouping;
-import com.craftinginterpreters.expr.subexpr.Literal;
-import com.craftinginterpreters.expr.subexpr.Unary;
+import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
 import com.craftinginterpreters.stmt.substmt.Expression;
 import com.craftinginterpreters.stmt.substmt.Print;
+import com.craftinginterpreters.stmt.substmt.Var;
 
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+  private Environment environment = new Environment();
+
   @Override
   public Object visitBinaryExpr(Binary expr) {
     Object left = evaluate(expr.left);
@@ -101,6 +101,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return null;
   }
 
+  @Override
+  public Object visitVariableExpr(Variable expr) {
+      return environment.get(expr.name);
+  }
+
   private void checkDivisionByZero(Token operator, Double divisor) {
     if (divisor == 0.0) {
       throw new RuntimeError(operator, "Division by zero.");
@@ -175,5 +180,17 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
     return null;
+  }
+
+  @Override
+  public Void visitVarStmt(Var stmt) {
+      Object value = null;
+
+      if (stmt.initializer != null) {
+        value = evaluate(stmt.initializer);
+      }
+
+      environment.define(stmt.name.lexeme, value);
+      return null;
   }
 }

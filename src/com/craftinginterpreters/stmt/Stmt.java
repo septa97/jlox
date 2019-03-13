@@ -2,6 +2,7 @@ package com.craftinginterpreters.stmt;
 
 import com.craftinginterpreters.stmt.substmt.Expression;
 import com.craftinginterpreters.stmt.substmt.Print;
+import com.craftinginterpreters.stmt.substmt.Var;
 
 public abstract class Stmt {
   public abstract <R> R accept(Visitor<R> visitor);
@@ -10,5 +11,7 @@ public abstract class Stmt {
     R visitExpressionStmt(Expression stmt);
 
     R visitPrintStmt(Print stmt);
+
+    R visitVarStmt(Var stmt);
   }
 }
