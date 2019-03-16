@@ -3,10 +3,10 @@ package com.craftinginterpreters.lox;
 import com.craftinginterpreters.expr.Expr;
 import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
+import com.craftinginterpreters.stmt.substmt.Block;
 import com.craftinginterpreters.stmt.substmt.Expression;
 import com.craftinginterpreters.stmt.substmt.Print;
 import com.craftinginterpreters.stmt.substmt.Var;
-
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -200,5 +200,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     environment.define(stmt.name.lexeme, value);
     return null;
+  }
+
+  @Override
+  public Void visitBlockStmt(Block stmt) {
+    executeBlock(stmt.statements, new Environment(environment));
+    return null;
+  }
+
+  private void executeBlock(List<Stmt> statements, Environment environment) {
+    Environment previous = environment.enclosing;
+
+    try {
+      this.environment = environment;
+
+      for (Stmt statement : statements) {
+        execute(statement);
+      }
+    } finally {
+      this.environment = previous;
+    }
   }
 }

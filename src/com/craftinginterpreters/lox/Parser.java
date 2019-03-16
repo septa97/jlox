@@ -3,10 +3,10 @@ package com.craftinginterpreters.lox;
 import com.craftinginterpreters.expr.Expr;
 import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
+import com.craftinginterpreters.stmt.substmt.Block;
 import com.craftinginterpreters.stmt.substmt.Expression;
 import com.craftinginterpreters.stmt.substmt.Print;
 import com.craftinginterpreters.stmt.substmt.Var;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +55,20 @@ class Parser {
 
   private Stmt statement() {
     if (match(TokenType.PRINT)) return printStatement();
+    if (match(TokenType.LEFT_BRACE)) return new Block(block());
 
     return expressionStatement();
+  }
+
+  private List<Stmt> block() {
+    List<Stmt> statements = new ArrayList<>();
+
+    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+      statements.add(declaration());
+    }
+
+    consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
   }
 
   private Print printStatement() {
