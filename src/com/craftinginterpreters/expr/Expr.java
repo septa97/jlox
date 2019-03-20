@@ -17,5 +17,7 @@ public abstract class Expr {
     R visitVariableExpr(Variable expr);
 
     R visitAssignExpr(Assign expr);
+
+    R visitLogicalExpr(Logical expr);
   }
 }

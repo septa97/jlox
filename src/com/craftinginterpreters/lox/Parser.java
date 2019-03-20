@@ -3,11 +3,9 @@ package com.craftinginterpreters.lox;
 import com.craftinginterpreters.expr.Expr;
 import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
-import com.craftinginterpreters.stmt.substmt.Block;
-import com.craftinginterpreters.stmt.substmt.Expression;
-import com.craftinginterpreters.stmt.substmt.Print;
-import com.craftinginterpreters.stmt.substmt.Var;
+import com.craftinginterpreters.stmt.substmt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class Parser {
@@ -54,10 +52,63 @@ class Parser {
   }
 
   private Stmt statement() {
+    if (match(TokenType.FOR)) return forStatement();
+    if (match(TokenType.IF)) return ifStatement();
     if (match(TokenType.PRINT)) return printStatement();
+    if (match(TokenType.WHILE)) return whileStatement();
     if (match(TokenType.LEFT_BRACE)) return new Block(block());
 
     return expressionStatement();
+  }
+
+  private Stmt forStatement() {
+    consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+    Stmt initializer;
+    if (match(TokenType.SEMICOLON)) {
+      initializer = null;
+    } else if (match(TokenType.VAR)) {
+      initializer = varDeclaration();
+    } else {
+      initializer = expressionStatement();
+    }
+
+    Expr condition = null;
+    if (!check(TokenType.SEMICOLON)) {
+      condition = expression();
+    }
+    consume(TokenType.SEMICOLON, "Expect ';' after the loop condition.");
+
+    Expr increment = null;
+    if (!check(TokenType.RIGHT_PAREN)) {
+      increment = expression();
+    }
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after the for clauses.");
+
+    Stmt body = statement();
+
+    if (increment != null) {
+      body = new Block(Arrays.asList(body, new Expression(increment)));
+    }
+
+    if (condition == null) condition = new Literal(true);
+    body = new While(condition, body);
+
+    if (initializer != null) {
+      body = new Block(Arrays.asList(initializer, body));
+    }
+
+    return body;
+  }
+
+  private While whileStatement() {
+    consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    Expr condition = expression();
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after the condition.");
+
+    Stmt body = statement();
+
+    return new While(condition, body);
   }
 
   private List<Stmt> block() {
@@ -69,6 +120,21 @@ class Parser {
 
     consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
     return statements;
+  }
+
+  private If ifStatement() {
+    consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr condition = expression();
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after the if condition.");
+
+    Stmt thenBranch = statement();
+    Stmt elseBranch = null;
+
+    if (match(TokenType.ELSE)) {
+      elseBranch = statement();
+    }
+
+    return new If(condition, thenBranch, elseBranch);
   }
 
   private Print printStatement() {
@@ -90,7 +156,7 @@ class Parser {
   }
 
   private Expr assignment() {
-    Expr expr = equality();
+    Expr expr = or();
 
     if (match(TokenType.EQUAL)) {
       Token equals = previous();
@@ -102,6 +168,30 @@ class Parser {
       }
 
       error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private Expr or() {
+    Expr expr = and();
+
+    while (match(TokenType.OR)) {
+      Token operator = previous();
+      Expr right = and();
+      expr = new Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = equality();
+
+    while (match(TokenType.AND)) {
+      Token operator = previous();
+      Expr right = equality();
+      expr = new Logical(expr, operator, right);
     }
 
     return expr;

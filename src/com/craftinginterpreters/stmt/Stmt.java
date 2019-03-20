@@ -1,9 +1,6 @@
 package com.craftinginterpreters.stmt;
 
-import com.craftinginterpreters.stmt.substmt.Block;
-import com.craftinginterpreters.stmt.substmt.Expression;
-import com.craftinginterpreters.stmt.substmt.Print;
-import com.craftinginterpreters.stmt.substmt.Var;
+import com.craftinginterpreters.stmt.substmt.*;
 
 public abstract class Stmt {
   public abstract <R> R accept(Visitor<R> visitor);
@@ -16,5 +13,9 @@ public abstract class Stmt {
     R visitVarStmt(Var stmt);
 
     R visitBlockStmt(Block stmt);
+
+    R visitIfStmt(If stmt);
+
+    R visitWhileStmt(While stmt);
   }
 }
