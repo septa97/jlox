@@ -19,5 +19,7 @@ public abstract class Expr {
     R visitAssignExpr(Assign expr);
 
     R visitLogicalExpr(Logical expr);
+
+    R visitCallExpr(Call expr);
   }
 }

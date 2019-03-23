@@ -17,5 +17,9 @@ public abstract class Stmt {
     R visitIfStmt(If stmt);
 
     R visitWhileStmt(While stmt);
+
+    R visitFunctionStmt(Function stmt);
+
+    R visitReturnStmt(Return stmt);
   }
 }
