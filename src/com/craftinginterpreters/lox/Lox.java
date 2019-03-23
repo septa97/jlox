@@ -1,7 +1,6 @@
 package com.craftinginterpreters.lox;
 
 import com.craftinginterpreters.stmt.Stmt;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,6 +20,13 @@ public class Lox {
     Parser parser = new Parser(tokens);
     List<Stmt> statements = parser.parse();
 
+    // Syntax error check
+    if (hadError) return;
+
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+
+    // Semantic error check (resolution error)
     if (hadError) return;
 
     interpreter.interpret(statements);
