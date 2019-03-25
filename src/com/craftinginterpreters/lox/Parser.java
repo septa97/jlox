@@ -4,6 +4,7 @@ import com.craftinginterpreters.expr.Expr;
 import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
 import com.craftinginterpreters.stmt.substmt.*;
+import com.craftinginterpreters.stmt.substmt.Class;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +31,7 @@ class Parser {
 
   private Stmt declaration() {
     try {
+      if (match(TokenType.CLASS)) return classDeclaration();
       if (match(TokenType.FUN)) return function("function");
       if (match(TokenType.VAR)) return varDeclaration();
 
@@ -40,7 +42,21 @@ class Parser {
     }
   }
 
-  private Stmt function(String kind) {
+  private Class classDeclaration() {
+    Token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+    consume(TokenType.LEFT_BRACE, "Expect '{' before the class body.");
+
+    List<Function> methods = new ArrayList<>();
+
+    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+      methods.add(function("method"));
+    }
+
+    consume(TokenType.RIGHT_BRACE, "Expect '}' after the class body.");
+    return new Class(name, methods);
+  }
+
+  private Function function(String kind) {
     Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
     consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 
@@ -201,6 +217,9 @@ class Parser {
       if (expr instanceof Variable) {
         Token name = ((Variable) expr).name;
         return new Assign(name, value);
+      } else if (expr instanceof Get) {
+        Get get = (Get) expr;
+        return new Set(get.object, get.name, value);
       }
 
       error(equals, "Invalid assignment target.");
@@ -298,6 +317,9 @@ class Parser {
     while (true) {
       if (match(TokenType.LEFT_PAREN)) {
         expr = finishCall(expr);
+      } else if (match(TokenType.DOT)) {
+        Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+        expr = new Get(expr, name);
       } else {
         break;
       }
@@ -331,6 +353,8 @@ class Parser {
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Literal(previous().literal);
     }
+
+    if (match(TokenType.THIS)) return new This(previous());
 
     if (match(TokenType.IDENTIFIER)) {
       return new Variable(previous());

@@ -4,6 +4,7 @@ import com.craftinginterpreters.expr.Expr;
 import com.craftinginterpreters.expr.subexpr.*;
 import com.craftinginterpreters.stmt.Stmt;
 import com.craftinginterpreters.stmt.substmt.*;
+import com.craftinginterpreters.stmt.substmt.Class;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -181,6 +182,35 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return function.call(this, arguments);
   }
 
+  @Override
+  public Object visitGetExpr(Get expr) {
+    Object object = evaluate(expr.object);
+
+    if (object instanceof LoxInstance) {
+      return ((LoxInstance) object).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties.");
+  }
+
+  @Override
+  public Object visitSetExpr(Set expr) {
+    Object object = evaluate(expr.object);
+
+    if (!(object instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    Object value = evaluate(expr.value);
+    ((LoxInstance) object).set(expr.name, value);
+    return null;
+  }
+
+  @Override
+  public Object visitThisExpr(This expr) {
+    return lookUpVariable(expr.keyword, expr);
+  }
+
   private void checkDivisionByZero(Token operator, Double divisor) {
     if (divisor == 0.0) {
       throw new RuntimeError(operator, "Division by zero.");
@@ -295,7 +325,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitFunctionStmt(Function stmt) {
-    LoxFunction function = new LoxFunction(stmt, environment);
+    LoxFunction function = new LoxFunction(stmt, environment, false);
     environment.define(stmt.name.lexeme, function);
     return null;
   }
@@ -307,6 +337,23 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     if (stmt.value != null) value = evaluate(stmt.value);
 
     throw new ReturnHandler(value);
+  }
+
+  @Override
+  public Void visitClassStmt(Class stmt) {
+    environment.define(stmt.name.lexeme, null);
+
+    Map<String, LoxFunction> methods = new HashMap<>();
+    for (Function method : stmt.methods) {
+      LoxFunction function =
+          new LoxFunction(method, environment, method.name.lexeme.equals("init"));
+      methods.put(method.name.lexeme, function);
+    }
+
+    LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+    environment.assign(stmt.name, klass);
+
+    return null;
   }
 
   public void executeBlock(List<Stmt> statements, Environment environment) {
@@ -327,7 +374,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     locals.put(expr, depth);
   }
 
-  private Object lookUpVariable(Token name, Variable expr) {
+  private Object lookUpVariable(Token name, Expr expr) {
     Integer distance = locals.get(expr);
 
     if (distance != null) {

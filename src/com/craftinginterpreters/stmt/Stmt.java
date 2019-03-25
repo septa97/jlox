@@ -1,6 +1,7 @@
 package com.craftinginterpreters.stmt;
 
 import com.craftinginterpreters.stmt.substmt.*;
+import com.craftinginterpreters.stmt.substmt.Class;
 
 public abstract class Stmt {
   public abstract <R> R accept(Visitor<R> visitor);
@@ -21,5 +22,7 @@ public abstract class Stmt {
     R visitFunctionStmt(Function stmt);
 
     R visitReturnStmt(Return stmt);
+
+    R visitClassStmt(Class stmt);
   }
 }

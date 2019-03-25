@@ -21,5 +21,11 @@ public abstract class Expr {
     R visitLogicalExpr(Logical expr);
 
     R visitCallExpr(Call expr);
+
+    R visitGetExpr(Get expr);
+
+    R visitSetExpr(Set expr);
+
+    R visitThisExpr(This expr);
   }
 }
