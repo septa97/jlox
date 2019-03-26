@@ -44,6 +44,13 @@ class Parser {
 
   private Class classDeclaration() {
     Token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+
+    Variable superclass = null;
+    if (match(TokenType.LESS)) {
+      consume(TokenType.IDENTIFIER, "Expect superclass name after '<'.");
+      superclass = new Variable(previous());
+    }
+
     consume(TokenType.LEFT_BRACE, "Expect '{' before the class body.");
 
     List<Function> methods = new ArrayList<>();
@@ -53,7 +60,7 @@ class Parser {
     }
 
     consume(TokenType.RIGHT_BRACE, "Expect '}' after the class body.");
-    return new Class(name, methods);
+    return new Class(name, methods, superclass);
   }
 
   private Function function(String kind) {
@@ -352,6 +359,13 @@ class Parser {
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Literal(previous().literal);
+    }
+
+    if (match(TokenType.SUPER)) {
+      Token keyword = previous();
+      consume(TokenType.DOT, "Expect '.' after 'super'.");
+      Token method = consume(TokenType.IDENTIFIER, "Expect superclass method name after '.'.");
+      return new Super(keyword, method);
     }
 
     if (match(TokenType.THIS)) return new This(previous());
